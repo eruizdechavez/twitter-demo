@@ -144,4 +144,10 @@ io.sockets.on('connection', function(socket) {
 			}
 		});
 	}, 15 * 1000);
+
+	socket.on('disconnect', function() {
+		if (interval) {
+			clearInterval(interval);
+		}
+	});
 });

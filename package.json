@@ -1,0 +1,15 @@
+{
+	"name": "twitter-demo",
+	"version": "0.0.1",
+	"private": true,
+	"dependencies": {
+		"express": "2.5.8",
+		"hbs": ">= 0.0.1",
+		"mongoose": ">= 0.0.1",
+		"underscore": ">= 0.0.1",
+		"socket.io": ">= 0.0.1",
+		"oauth": ">= 0.0.1",
+		"request": ">= 0.0.1",
+		"querystring": ">= 0.0.1"
+	}
+}

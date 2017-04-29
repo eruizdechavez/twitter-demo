@@ -1,12 +1,12 @@
-$(function(){
+$(() => {
 	// Socket connection to NodeJS
 	var socket = io.connect('http://' + window.location.hostname + ':' + window.location.port);
 
 	// Do something when we receive tweet(s)
-	socket.on('tweets', function(data){
+	socket.on('tweets', data => {
 		// Get the template from the HTML
 		var template = '<div class="row" id="">' + $('.row:first').html() + '</div>';
-		$.each(data, function(key, tweet){
+		$.each(data, (key, tweet) => {
 			// If the item is already on the DOM, do not add it again
 			if($('#' + tweet.id).length) {
 				return;

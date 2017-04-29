@@ -5,17 +5,19 @@
 // - Socket.io: Monitor and notify clients about new tweets.
 // - Handlebars: Template engine. I do not like Jade.
 // ## Module dependencias
-var express = require('express'),
-	connect = require('express/node_modules/connect'),
-	MemoryStore = connect.middleware.session.MemoryStore,
-	parseCookie = connect.utils.parseCookie,
-	app = module.exports = express.createServer(),
-	io = require('socket.io').listen(app),
-	_ = require('underscore');
+var express = require('express');
+
+var connect = require('express/node_modules/connect');
+var MemoryStore = connect.middleware.session.MemoryStore;
+var parseCookie = connect.utils.parseCookie;
+var app = module.exports = express.createServer();
+var io = require('socket.io').listen(app);
+var _ = require('underscore');
 
 // ## Application controllers
-var oa_controller = require('./controllers/oauth_controller'),
-	twitter_controller = require('./controllers/twitter_controller');
+var oa_controller = require('./controllers/oauth_controller');
+
+var twitter_controller = require('./controllers/twitter_controller');
 
 // ## View helpers
 var hbs_helpers = require('./libs/hbs_helpers');
@@ -24,7 +26,7 @@ var hbs_helpers = require('./libs/hbs_helpers');
 var store;
 
 // ## Application configuration
-app.configure(function() {
+app.configure(() => {
 	app.set('views', __dirname + '/views');
 	app.set('view engine', 'hbs');
 	app.set('oauth callback', '/callback');
@@ -42,7 +44,7 @@ app.configure(function() {
 	app.use(express.static(__dirname + '/public'));
 });
 
-app.configure('local', 'development', function() {
+app.configure('local', 'development', () => {
 	app.set('app domain', 'http://localhost');
 	app.set('app port', 3000);
 	app.use(express.errorHandler({
@@ -51,7 +53,7 @@ app.configure('local', 'development', function() {
 	}));
 });
 
-app.configure('production', function() {
+app.configure('production', () => {
 	app.set('app domain', 'http://yoursite.com');
 	app.set('app port', 3001);
 	app.use(express.errorHandler());
@@ -67,10 +69,8 @@ oa_controller.initialize(app.set('oauth consumer key'), app.set('oauth consumer 
 
 // ## Routes
 // ### Main (and only) route
-app.get('/', oa_controller.auth, twitter_controller.home_timeline, function(req, res, next) {
-	req.session.since_id = _.max(req.twitter.home_timeline, function(tweet) {
-		return tweet.id;
-	}).id + 1;
+app.get('/', oa_controller.auth, twitter_controller.home_timeline, (req, res, next) => {
+	req.session.since_id = _.max(req.twitter.home_timeline, tweet => tweet.id).id + 1;
 
 	res.render('index', {
 		title: 'Hello World!',
@@ -83,7 +83,7 @@ app.get('/', oa_controller.auth, twitter_controller.home_timeline, function(req,
 app.get('/callback', oa_controller.callback('/'));
 
 // ### Start Express
-app.listen(app.set('app port'), function() {
+app.listen(app.set('app port'), () => {
 	console.log('Express server listening on port %d in %s mode', app.address().port, app.settings.env);
 });
 
@@ -95,7 +95,7 @@ app.listen(app.set('app port'), function() {
 // http://www.danielbaulig.de/socket-ioexpress/
 //
 // Retrieve user cookie from express and save it to the socket
-io.set('log level', 0).set('authorization', function(data, accept) {
+io.set('log level', 0).set('authorization', (data, accept) => {
 	if (!data.headers.cookie) {
 		return accept('No cookie transmitted.', false);
 	}
@@ -103,7 +103,7 @@ io.set('log level', 0).set('authorization', function(data, accept) {
 	data.cookie = parseCookie(data.headers.cookie);
 	data.sessionID = data.cookie['twitter-demo.sid'];
 
-	store.load(data.sessionID, function(err, session) {
+	store.load(data.sessionID, (err, session) => {
 		if (err || !session) {
 			return accept('Error', false);
 		}
@@ -114,10 +114,10 @@ io.set('log level', 0).set('authorization', function(data, accept) {
 });
 
 // ### Socket listeners
-io.sockets.on('connection', function(socket) {
+io.sockets.on('connection', socket => {
 	var session = socket.handshake.session;
 
-	var interval = setInterval(function() {
+	var interval = setInterval(() => {
 		// Send our controller the required data to connect to Twitter
 		twitter_controller.since({
 			consumer_key: app.set('oauth consumer key'),
@@ -125,15 +125,13 @@ io.sockets.on('connection', function(socket) {
 			access_token: session.oauth.access_token,
 			access_token_secret: session.oauth.access_token_secret,
 			since_id: session.since_id
-		}, function(err, res) {
+		}, (err, res) => {
 			// TODO: Handle the error
 			if (err) {
 				console.log(err);
 			} else {
 				// Save last id
-				var since_id = _.max(res, function(tweet) {
-					return tweet.id;
-				});
+				var since_id = _.max(res, tweet => tweet.id);
 				if (since_id) {
 					session.since_id = since_id.id + 1;
 					session.touch().save();
@@ -145,7 +143,7 @@ io.sockets.on('connection', function(socket) {
 		});
 	}, 15 * 1000);
 
-	socket.on('disconnect', function() {
+	socket.on('disconnect', () => {
 		if (interval) {
 			clearInterval(interval);
 		}
